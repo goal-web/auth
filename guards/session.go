@@ -4,8 +4,8 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-func SessionGuard(config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
-	if guard, ok := ctx.Get("jwt_guard").(contracts.Guard); ok {
+func SessionGuard(name string, config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
+	if guard, ok := ctx.Get("guard:" + name).(contracts.Guard); ok {
 		return guard
 	}
 	guard := &Session{
@@ -15,7 +15,7 @@ func SessionGuard(config contracts.Fields, ctx contracts.Context, provider contr
 		sessionKey: config["session_key"].(string),
 	}
 
-	ctx.Set("jwt_guard", guard)
+	ctx.Set("guard:"+name, guard)
 
 	return guard
 }

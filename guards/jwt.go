@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func JwtGuard(config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
-	if guard, ok := ctx.Get("jwt_guard").(contracts.Guard); ok {
+func JwtGuard(name string, config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
+	if guard, ok := ctx.Get("guard:" + name).(contracts.Guard); ok {
 		return guard
 	}
 	guard := &Jwt{
@@ -17,9 +17,10 @@ func JwtGuard(config contracts.Fields, ctx contracts.Context, provider contracts
 		signMethod: config["method"].(jwt.SigningMethod),
 		ctx:        ctx,
 		users:      provider,
+		lifetime:   time.Duration(utils.GetIntField(config, "lifetime", 60*60*24)),
 	}
 
-	ctx.Set("jwt_guard", guard)
+	ctx.Set("guard:"+name, guard)
 
 	return guard
 }
@@ -27,6 +28,7 @@ func JwtGuard(config contracts.Fields, ctx contracts.Context, provider contracts
 type Jwt struct {
 	secret     []byte
 	isVerified bool
+	lifetime   time.Duration
 	signMethod jwt.SigningMethod
 	ctx        contracts.Context
 	users      contracts.UserProvider
@@ -58,7 +60,7 @@ func (this *Jwt) Login(user contracts.Authenticatable) interface{} {
 	token, err := jwt.NewWithClaims(this.signMethod, JwtAuthClaims{
 		UserId: user.GetId(),
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(this.lifetime * time.Second).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "goal",
 		},

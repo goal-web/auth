@@ -28,7 +28,7 @@ func (this *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
 	driver := utils.GetStringField(config, "driver")
 
 	if guardDriver, existsDriver := this.guardDrivers[driver]; existsDriver {
-		return guardDriver(config, ctx, this.UserProvider(utils.GetStringField(config, "provider")))
+		return guardDriver(key, config, ctx, this.UserProvider(utils.GetStringField(config, "provider")))
 	}
 
 	panic(GuardException{
