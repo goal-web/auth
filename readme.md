@@ -62,7 +62,6 @@ func init() {
 `.env` 的数据库相关配置
 
 ```bash
-# 默认连接
 auth.jwt.secret=jwt_secret
 auth.default=jwt
 ```
