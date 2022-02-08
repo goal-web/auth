@@ -3,9 +3,8 @@ module github.com/goal-web/auth
 go 1.17
 
 require (
-	github.com/goal-web/contracts v0.1.29
+	github.com/goal-web/contracts v0.1.36
 	github.com/goal-web/database v0.1.3
-	github.com/goal-web/pipeline v0.1.5
 	github.com/goal-web/supports v0.1.12
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 )
