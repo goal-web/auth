@@ -14,12 +14,12 @@ func (this *ServiceProvider) Register(application contracts.Application) {
 	application.Singleton("gate.factory", func() contracts.GateFactory {
 		return GetFactory()
 	})
-	application.Bind("gate", func(factory contracts.GateFactory, ctx contracts.Context) contracts.Gate {
+	application.Bind("gate", func(factory contracts.GateFactory, guard contracts.Guard, ctx contracts.Context) contracts.Gate {
 		instance, exists := ctx.Get("access.gate").(contracts.Gate)
 		if exists {
 			return instance
 		}
-		user, _ := ctx.Get("user").(contracts.Authorizable)
+		user, _ := guard.User().(contracts.Authorizable)
 		instance = NewGate(factory, user)
 		ctx.Set("access.gate", instance)
 		return instance
