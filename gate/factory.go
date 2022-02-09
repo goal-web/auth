@@ -16,19 +16,30 @@ type Factory struct {
 	afterHooks  []contracts.GateHook
 }
 
-func NewFactory() contracts.GateFactory {
-	return &Factory{
-		abilities:   map[string]contracts.GateChecker{},
-		policies:    map[string]contracts.Policy{},
-		beforeHooks: make([]contracts.GateHook, 0),
-		afterHooks:  make([]contracts.GateHook, 0),
+var factory *Factory
+
+func Check(user contracts.Authorizable, ability string, arguments ...interface{}) bool {
+	return factory.Check(user, ability, arguments...)
+}
+
+func GetFactory() contracts.GateFactory {
+	if factory == nil {
+		factory = &Factory{
+			abilities:   map[string]contracts.GateChecker{},
+			policies:    map[string]contracts.Policy{},
+			beforeHooks: make([]contracts.GateHook, 0),
+			afterHooks:  make([]contracts.GateHook, 0),
+		}
 	}
+	return factory
 }
 
 func (this *Factory) Check(user contracts.Authorizable, ability string, arguments ...interface{}) bool {
 	this.runBeforeHooks(user, ability, arguments...)
 	defer this.runAfterHooks(user, ability, arguments...)
+
 	checker, exists := this.get(ability, arguments...)
+	
 	if exists {
 		return checker(user, arguments...)
 	}
@@ -59,7 +70,14 @@ func (this *Factory) get(ability string, arguments ...interface{}) (contracts.Ga
 	}
 
 	if len(arguments) > 0 {
-		classname := utils.GetTypeKey(reflect.TypeOf(arguments[0]))
+		var classname string
+		if class, isClass := arguments[0].(contracts.Class); isClass {
+			classname = class.ClassName()
+		} else if model, isModel := arguments[0].(contracts.Model); isModel {
+			classname = model.GetClass().ClassName()
+		} else {
+			classname = utils.GetTypeKey(reflect.TypeOf(arguments[0]))
+		}
 		if this.policies[classname] != nil {
 			checker, exists = this.policies[classname][ability]
 		}

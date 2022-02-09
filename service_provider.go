@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/goal-web/auth/gate"
 	"github.com/goal-web/auth/guards"
 	"github.com/goal-web/auth/providers"
 	"github.com/goal-web/contracts"
@@ -15,7 +14,6 @@ func (this ServiceProvider) Start() error {
 }
 
 func (this ServiceProvider) Stop() {
-
 }
 
 func (this ServiceProvider) Register(container contracts.Application) {
@@ -43,19 +41,5 @@ func (this ServiceProvider) Register(container contracts.Application) {
 		guard = auth.Guard(authConfig.Defaults.Guard, ctx)
 		ctx.Set("auth.guard", guard)
 		return guard
-	})
-
-	container.Singleton("gate.factory", func() contracts.GateFactory {
-		return gate.NewFactory()
-	})
-	container.Bind("gate.factory", func(factory contracts.GateFactory, ctx contracts.Context) contracts.Gate {
-		instance, exists := ctx.Get("access.gate").(contracts.Gate)
-		if exists {
-			return instance
-		}
-		user, _ := ctx.Get("user").(contracts.Authorizable)
-		instance = gate.NewGate(factory, user)
-		ctx.Set("access.gate", instance)
-		return instance
 	})
 }
