@@ -34,9 +34,15 @@ func (this ServiceProvider) Register(container contracts.Application) {
 			userProviders: make(map[string]contracts.UserProvider),
 		}
 	})
-	container.Bind("auth.guard", func(config contracts.Config, auth contracts.Auth, request contracts.HttpRequest) contracts.Guard {
+	container.Bind("auth.guard", func(config contracts.Config, auth contracts.Auth, ctx contracts.Context) contracts.Guard {
+		guard, exists := ctx.Get("auth.guard").(contracts.Guard)
+		if exists {
+			return guard
+		}
 		authConfig := config.Get("auth").(Config)
-		return auth.Guard(authConfig.Defaults.Guard, request)
+		guard = auth.Guard(authConfig.Defaults.Guard, ctx)
+		ctx.Set("auth.guard", guard)
+		return guard
 	})
 
 	container.Singleton("gate.factory", func() contracts.GateFactory {
