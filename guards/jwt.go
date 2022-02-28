@@ -5,6 +5,7 @@ import (
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"github.com/golang-jwt/jwt"
+	"strings"
 	"time"
 )
 
@@ -41,9 +42,21 @@ type JwtAuthClaims struct {
 }
 
 func (this *Jwt) parseToken() string {
-	token, ok := this.ctx.Get("token").(string)
+	var token, ok = this.ctx.Get("token").(string)
 	if ok {
 		return token
+	}
+
+	if request, isHttpRequest := this.ctx.(contracts.HttpRequest); isHttpRequest {
+		if token = request.QueryParam("token"); token != "" {
+			return token
+		} else if token = request.Request().Header.Get("Authorization"); strings.Contains(token, "Bearer ") {
+			return strings.ReplaceAll(token, "Bearer ", "")
+		} else if token = request.Request().Header.Get("token"); token != "" {
+			return token
+		} else if token = request.FormValue("token"); token != "" {
+			return token
+		}
 	}
 
 	logs.WithField("token", this.ctx.Get("token")).Debug("jwt guard parseToken error")
