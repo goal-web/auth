@@ -43,7 +43,7 @@ type JwtAuthClaims struct {
 
 func (this *Jwt) parseToken() string {
 	var token, ok = this.ctx.Get("token").(string)
-	if ok {
+	if ok && token != "" {
 		return token
 	}
 
