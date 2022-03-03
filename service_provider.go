@@ -33,13 +33,6 @@ func (this ServiceProvider) Register(container contracts.Application) {
 		}
 	})
 	container.Bind("auth.guard", func(config contracts.Config, auth contracts.Auth, ctx contracts.Context) contracts.Guard {
-		guard, exists := ctx.Get("auth.guard").(contracts.Guard)
-		if exists {
-			return guard
-		}
-		authConfig := config.Get("auth").(Config)
-		guard = auth.Guard(authConfig.Defaults.Guard, ctx)
-		ctx.Set("auth.guard", guard)
-		return guard
+		return auth.Guard(config.Get("auth").(Config).Defaults.Guard, ctx)
 	})
 }
