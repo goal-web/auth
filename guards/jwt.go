@@ -1,6 +1,8 @@
 package guards
 
 import (
+	"errors"
+	"fmt"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
@@ -9,14 +11,19 @@ import (
 	"time"
 )
 
-func JwtGuard(name string, config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
-	if guard, ok := ctx.Get("guard:" + name).(contracts.Guard); ok {
+const (
+	BlacklistRedisKey = "auth:blacklist:%s"
+)
+
+func JwtGuard(name string, config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) *Jwt {
+	if guard, ok := ctx.Get("guard:" + name).(*Jwt); ok {
 		return guard
 	}
 	guard := &Jwt{
 		secret:     []byte(utils.GetStringField(config, "secret")),
 		signMethod: config["method"].(jwt.SigningMethod),
 		ctx:        ctx,
+		name:       name,
 		users:      provider,
 		lifetime:   time.Duration(utils.GetIntField(config, "lifetime", 60*60*24)),
 	}
@@ -34,14 +41,31 @@ type Jwt struct {
 	ctx        contracts.Context
 	users      contracts.UserProvider
 	current    contracts.Authenticatable
+	redis      contracts.RedisConnection
+	err        error
+	token      string
+	name       string
+}
+
+func (this *Jwt) SetRedis(redis contracts.RedisConnection) {
+	this.redis = redis
+}
+
+func (this *Jwt) SetToken(token string) {
+	this.token = token
 }
 
 type JwtAuthClaims struct {
 	UserId string `json:"user_id"`
+	Guard  string `json:"guard"`
 	jwt.StandardClaims
 }
 
 func (this *Jwt) parseToken() string {
+	if this.token != "" {
+		return this.token
+	}
+
 	var token, ok = this.ctx.Get("token").(string)
 	if ok && token != "" {
 		return token
@@ -69,9 +93,27 @@ func (this *Jwt) Once(user contracts.Authenticatable) {
 	this.isVerified = true
 }
 
+func (this *Jwt) Logout() error {
+	if this.redis == nil {
+		return errors.New("redis dependencies are missing")
+	}
+
+	if this.Check() {
+		_, err := this.redis.Set(fmt.Sprintf(BlacklistRedisKey, this.parseToken()), "1", this.lifetime)
+		return err
+	}
+
+	return nil
+}
+
+func (this *Jwt) Error() error {
+	return this.err
+}
+
 func (this *Jwt) Login(user contracts.Authenticatable) interface{} {
 	token, err := jwt.NewWithClaims(this.signMethod, JwtAuthClaims{
 		UserId: user.GetId(),
+		Guard:  this.name,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(this.lifetime * time.Second).Unix(),
 			IssuedAt:  time.Now().Unix(),
@@ -113,21 +155,40 @@ func (this *Jwt) Guest() bool {
 }
 
 func (this *Jwt) Verify(tokenString string) contracts.Authenticatable {
+	if this.redis != nil {
+		exists, _ := this.redis.Exists(fmt.Sprintf(BlacklistRedisKey, this.parseToken()))
+
+		if exists > 0 {
+			this.err = errors.New("token has been blacklisted")
+			return nil
+		}
+	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &JwtAuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return this.secret, nil
 	})
 
 	if err != nil {
+		this.err = err
 		logs.WithError(err).WithField("token", tokenString).Debug("jwt guard Verify err")
 
 		return nil
 	}
 
 	if claims, ok := token.Claims.(*JwtAuthClaims); ok && token.Valid {
-		return this.users.RetrieveById(claims.UserId)
+		if claims.Guard != this.name {
+			this.err = errors.New("guard mismatch")
+			return nil
+		}
+
+		user := this.users.RetrieveById(claims.UserId)
+		if user == nil {
+			this.err = errors.New("user does not exist")
+		}
+
+		return user
 	}
 
-	logs.WithError(err).Debug("jwt guard Verify err")
+	this.err = errors.New("jwt guard Verify err")
 	return nil
 }

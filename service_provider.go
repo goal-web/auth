@@ -17,13 +17,25 @@ func (this ServiceProvider) Stop() {
 }
 
 func (this ServiceProvider) Register(container contracts.Application) {
-	container.Singleton("auth", func(config contracts.Config) contracts.Auth {
+	container.Singleton("auth", func(config contracts.Config, factory contracts.RedisFactory) contracts.Auth {
 		authConfig := config.Get("auth").(Config)
 
 		return &Auth{
 			authConfig: authConfig,
 			guardDrivers: map[string]contracts.GuardDriver{
-				"jwt":     guards.JwtGuard,
+				"jwt": func(name string, config contracts.Fields, ctx contracts.Context, provider contracts.UserProvider) contracts.Guard {
+					guard := guards.JwtGuard(name, config, ctx, provider)
+
+					if factory != nil { // 有 redis 的话
+						if redisConnName, ok := config["redis"].(string); ok {
+							guard.SetRedis(factory.Connection(redisConnName))
+						} else {
+							guard.SetRedis(factory.Connection())
+						}
+					}
+
+					return guard
+				},
 				"session": guards.SessionGuard,
 			},
 			userDrivers: map[string]contracts.UserProviderDriver{

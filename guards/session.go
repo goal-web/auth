@@ -29,6 +29,16 @@ type Session struct {
 	current    contracts.Authenticatable
 }
 
+func (this *Session) Logout() error {
+	this.session.Remove(this.sessionKey)
+	this.current = nil
+	return nil
+}
+
+func (this *Session) Error() error {
+	return nil
+}
+
 func (this *Session) Once(user contracts.Authenticatable) {
 	this.current = user
 	this.isVerified = true
