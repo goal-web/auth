@@ -25,7 +25,7 @@ func JwtGuard(name string, config contracts.Fields, ctx contracts.Context, provi
 		ctx:        ctx,
 		name:       name,
 		users:      provider,
-		lifetime:   time.Duration(utils.GetIntField(config, "lifetime", 60*60*24)),
+		lifetime:   time.Duration(utils.GetIntField(config, "lifetime", 60*60*24*int(time.Second))),
 	}
 
 	ctx.Set("guard:"+name, guard)
@@ -115,7 +115,7 @@ func (this *Jwt) Login(user contracts.Authenticatable) interface{} {
 		UserId: user.GetId(),
 		Guard:  this.name,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(this.lifetime * time.Second).Unix(),
+			ExpiresAt: time.Now().Add(this.lifetime).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "goal",
 		},
