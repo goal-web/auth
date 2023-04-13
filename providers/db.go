@@ -2,20 +2,19 @@ package providers
 
 import (
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/database/table"
 )
 
 type DB struct {
-	model contracts.Model
+	model contracts.Query[contracts.Authenticatable]
 }
 
 func DBDriver(config contracts.Fields) contracts.UserProvider {
-	return &DB{model: config["model"].(contracts.Model)}
+	return &DB{model: config["model"].(contracts.Query[contracts.Authenticatable])}
 }
 
 func (db *DB) RetrieveById(identifier string) contracts.Authenticatable {
-	if user := table.FromModel(db.model).Where(db.model.GetPrimaryKey(), identifier).First(); user != nil {
-		return user.(contracts.Authenticatable)
+	if user := db.model.Find(identifier); user != nil {
+		return *user
 	}
 	return nil
 }

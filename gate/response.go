@@ -6,9 +6,9 @@ import (
 )
 
 type Response struct {
-	Allowed bool        `json:"allowed"`
-	Message string      `json:"message"`
-	Code    interface{} `json:"code"`
+	Allowed bool   `json:"allowed"`
+	Message string `json:"message"`
+	Code    any    `json:"code"`
 }
 
 func (this *Response) Status() int {

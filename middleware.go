@@ -1,12 +1,12 @@
 package auth
 
 import (
+	"errors"
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/supports/exceptions"
 )
 
-func Guard(guards ...string) interface{} {
-	return func(request contracts.HttpRequest, next contracts.Pipe, auth contracts.Auth, config contracts.Config) interface{} {
+func Guard(guards ...string) any {
+	return func(request contracts.HttpRequest, next contracts.Pipe, auth contracts.Auth, config contracts.Config) any {
 
 		if len(guards) == 0 {
 			guards = append(guards, config.Get("auth").(Config).Defaults.Guard)
@@ -14,11 +14,7 @@ func Guard(guards ...string) interface{} {
 
 		for _, guard := range guards {
 			if auth.Guard(guard, request).Guest() {
-				panic(Exception{
-					Exception: exceptions.New(guard+" guard authentication failed", contracts.Fields{
-						"guards": guards,
-					}),
-				})
+				panic(Exception{Err: errors.New(guard + " guard authentication failed")})
 			}
 		}
 

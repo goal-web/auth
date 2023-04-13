@@ -4,13 +4,14 @@ import (
 	"github.com/goal-web/contracts"
 )
 
+// todo
 type ServiceProvider struct {
-	app      contracts.Application
-	Policies map[contracts.Class]contracts.Policy
+	app contracts.Application
+	//Policies map[contracts.Class]contracts.Policy
 }
 
-func (this *ServiceProvider) Register(application contracts.Application) {
-	this.app = application
+func (provider *ServiceProvider) Register(application contracts.Application) {
+	provider.app = application
 	application.Singleton("gate.factory", func() contracts.GateFactory {
 		return GetFactory()
 	})
@@ -26,14 +27,14 @@ func (this *ServiceProvider) Register(application contracts.Application) {
 	})
 }
 
-func (this *ServiceProvider) Start() error {
-	this.app.Call(func(gateFactory contracts.GateFactory) {
-		for class, policy := range this.Policies {
-			gateFactory.Policy(class, policy)
-		}
+func (provider *ServiceProvider) Start() error {
+	provider.app.Call(func(gateFactory contracts.GateFactory) {
+		//for class, policy := range provider.Policies {
+		//	gateFactory.Policy(class, policy)
+		//}
 	})
 	return nil
 }
 
-func (this *ServiceProvider) Stop() {
+func (provider *ServiceProvider) Stop() {
 }

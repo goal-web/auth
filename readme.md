@@ -24,14 +24,14 @@ import (
 )
 
 func init() {
-	configs["auth"] = func(env contracts.Env) interface{} {
+	configs["auth"] = func(env contracts.Env) any {
 		return auth.Config{
 			Defaults: struct {
 				Guard string
 				User  string
 			}{
-				Guard: env.StringOption("auth.default", "jwt"), // 默认守卫
-				User:  env.StringOption("auth.user", "db"), // 默认用户提供者
+				Guard: env.StringOptional("auth.default", "jwt"), // 默认守卫
+				User:  env.StringOptional("auth.user", "db"), // 默认用户提供者
 			},
 			Guards: map[string]contracts.Fields{
 				"jwt": { // 守卫名称
@@ -45,7 +45,7 @@ func init() {
 					"driver":      "session", // 驱动名
 					"provider":    "db", // 用户提供者名
 					// session驱动所需的参数，如果应用需要配置多个session驱动的守卫，那么需要配置不一样的 session_key
-					"session_key": env.StringOption("auth.session.key", "auth_session"), 
+					"session_key": env.StringOptional("auth.session.key", "auth_session"), 
 				},
 			},
 			Users: map[string]contracts.Fields{ // 用户提供者，目前只支持 db
@@ -114,7 +114,7 @@ func LoginExample(guard contracts.Guard) contracts.Fields {
 	}
 }
 
-func GetCurrentUser(guard contracts.Guard) interface{} {
+func GetCurrentUser(guard contracts.Guard) any {
 	return contracts.Fields{
 		"user": guard.User(), // 已登录返回用户模型，否则返回 nil
 	}
@@ -154,7 +154,7 @@ type Guard interface {
 	GetId() string
 	Check() bool
 	Guest() bool
-	Login(user Authenticatable) interface{}
+	Login(user Authenticatable) any
 }
 ```
 

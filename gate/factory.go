@@ -3,8 +3,6 @@ package gate
 import (
 	"fmt"
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/supports/utils"
-	"reflect"
 )
 
 type Factory struct {
@@ -18,7 +16,7 @@ type Factory struct {
 
 var factory *Factory
 
-func Check(user contracts.Authorizable, ability string, arguments ...interface{}) bool {
+func Check(user contracts.Authorizable, ability string, arguments ...any) bool {
 	return factory.Check(user, ability, arguments...)
 }
 
@@ -34,86 +32,87 @@ func GetFactory() contracts.GateFactory {
 	return factory
 }
 
-func (this *Factory) Check(user contracts.Authorizable, ability string, arguments ...interface{}) bool {
-	this.runBeforeHooks(user, ability, arguments...)
-	defer this.runAfterHooks(user, ability, arguments...)
+func (factory *Factory) Check(user contracts.Authorizable, ability string, arguments ...any) bool {
+	factory.runBeforeHooks(user, ability, arguments...)
+	defer factory.runAfterHooks(user, ability, arguments...)
 
-	checker, exists := this.get(ability, arguments...)
-	
+	checker, exists := factory.get(ability, arguments...)
+
 	if exists {
 		return checker(user, arguments...)
 	}
 	return false
 }
 
-func (this *Factory) Has(ability string) bool {
-	_, exists := this.abilities[ability]
+func (factory *Factory) Has(ability string) bool {
+	_, exists := factory.abilities[ability]
 	return exists
 }
 
-func (this *Factory) runBeforeHooks(user contracts.Authorizable, ability string, arguments ...interface{}) {
-	for _, hook := range this.beforeHooks {
+func (factory *Factory) runBeforeHooks(user contracts.Authorizable, ability string, arguments ...any) {
+	for _, hook := range factory.beforeHooks {
 		hook(user, ability, arguments...)
 	}
 }
-func (this *Factory) runAfterHooks(user contracts.Authorizable, ability string, arguments ...interface{}) {
-	for _, hook := range this.afterHooks {
+func (factory *Factory) runAfterHooks(user contracts.Authorizable, ability string, arguments ...any) {
+	for _, hook := range factory.afterHooks {
 		hook(user, ability, arguments...)
 	}
 }
 
-func (this *Factory) get(ability string, arguments ...interface{}) (contracts.GateChecker, bool) {
-	checker, exists := this.abilities[ability]
+func (factory *Factory) get(ability string, arguments ...any) (contracts.GateChecker, bool) {
+	checker, exists := factory.abilities[ability]
 
 	if exists {
 		return checker, exists
 	}
 
-	if len(arguments) > 0 {
-		var classname string
-		if class, isClass := arguments[0].(contracts.Class); isClass {
-			classname = class.ClassName()
-		} else if model, isModel := arguments[0].(contracts.Model); isModel {
-			classname = model.GetClass().ClassName()
-		} else {
-			classname = utils.GetTypeKey(reflect.TypeOf(arguments[0]))
-		}
-		if this.policies[classname] != nil {
-			checker, exists = this.policies[classname][ability]
-		}
-	}
+	// todo
+	//if len(arguments) > 0 {
+	//	var classname string
+	//	if class, isClass := arguments[0].(contracts.Class); isClass {
+	//		classname = class.ClassName()
+	//	} else if model, isModel := arguments[0].(contracts.Model); isModel {
+	//		classname = model.GetClass().ClassName()
+	//	} else {
+	//		classname = utils.GetTypeKey(reflect.TypeOf(arguments[0]))
+	//	}
+	//	if factory.policies[classname] != nil {
+	//		checker, exists = factory.policies[classname][ability]
+	//	}
+	//}
 
 	return checker, exists
 }
 
-func (this *Factory) Define(ability string, callback contracts.GateChecker) contracts.GateFactory {
-	this.abilities[ability] = callback
-	return this
+func (factory *Factory) Define(ability string, callback contracts.GateChecker) contracts.GateFactory {
+	factory.abilities[ability] = callback
+	return factory
 }
 
-func (this *Factory) Policy(class contracts.Class, policy contracts.Policy) contracts.GateFactory {
-	this.policies[class.ClassName()] = policy
-	return this
+func (factory *Factory) Policy(class contracts.Class[contracts.Authenticatable], policy contracts.Policy) contracts.GateFactory {
+	factory.policies[class.ClassName()] = policy
+	return factory
 }
 
-func (this *Factory) Before(callable contracts.GateHook) contracts.GateFactory {
-	this.beforeHooks = append(this.beforeHooks, callable)
-	return this
+func (factory *Factory) Before(callable contracts.GateHook) contracts.GateFactory {
+	factory.beforeHooks = append(factory.beforeHooks, callable)
+	return factory
 }
 
-func (this *Factory) After(callable contracts.GateHook) contracts.GateFactory {
-	this.afterHooks = append(this.afterHooks, callable)
-	return this
+func (factory *Factory) After(callable contracts.GateHook) contracts.GateFactory {
+	factory.afterHooks = append(factory.afterHooks, callable)
+	return factory
 }
 
-func (this *Factory) Abilities() []string {
+func (factory *Factory) Abilities() []string {
 	var abilities []string
 
-	for ability, _ := range this.abilities {
+	for ability, _ := range factory.abilities {
 		abilities = append(abilities, ability)
 	}
 
-	for name, policy := range this.policies {
+	for name, policy := range factory.policies {
 		for ability, _ := range policy {
 			abilities = append(abilities, fmt.Sprintf("%s@%s", name, ability))
 		}

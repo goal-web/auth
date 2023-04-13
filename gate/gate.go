@@ -17,15 +17,15 @@ func NewGate(factory contracts.GateFactory, user contracts.Authorizable) contrac
 	}
 }
 
-func (gate *Gate) Allows(ability string, arguments ...interface{}) bool {
+func (gate *Gate) Allows(ability string, arguments ...any) bool {
 	return gate.factory.Check(gate.user, ability, arguments...)
 }
 
-func (gate *Gate) Denies(ability string, arguments ...interface{}) bool {
+func (gate *Gate) Denies(ability string, arguments ...any) bool {
 	return !gate.factory.Check(gate.user, ability, arguments...)
 }
 
-func (gate *Gate) Check(abilities []string, arguments ...interface{}) bool {
+func (gate *Gate) Check(abilities []string, arguments ...any) bool {
 	for _, ability := range abilities {
 		if !gate.factory.Check(gate.user, ability, arguments...) {
 			return false
@@ -34,7 +34,7 @@ func (gate *Gate) Check(abilities []string, arguments ...interface{}) bool {
 	return true
 }
 
-func (gate *Gate) Any(abilities []string, arguments ...interface{}) bool {
+func (gate *Gate) Any(abilities []string, arguments ...any) bool {
 	for _, ability := range abilities {
 		if gate.factory.Check(gate.user, ability, arguments...) {
 			return true
@@ -43,10 +43,10 @@ func (gate *Gate) Any(abilities []string, arguments ...interface{}) bool {
 	return false
 }
 
-func (gate *Gate) Authorize(ability string, arguments ...interface{}) {
+func (gate *Gate) Authorize(ability string, arguments ...any) {
 	if gate.Denies(ability, arguments...) {
 		panic(Exception{
-			Exception: exceptions.New("no operating authority", nil),
+			Exception: exceptions.New("no operating authority"),
 			User:      gate.user,
 			Ability:   ability,
 			Arguments: arguments,
@@ -54,7 +54,7 @@ func (gate *Gate) Authorize(ability string, arguments ...interface{}) {
 	}
 }
 
-func (gate *Gate) Inspect(ability string, arguments ...interface{}) contracts.HttpResponse {
+func (gate *Gate) Inspect(ability string, arguments ...any) contracts.HttpResponse {
 	if gate.Allows(ability, arguments...) {
 		return &Response{
 			Allowed: true,

@@ -7,5 +7,5 @@ type Exception struct {
 
 	User      contracts.Authorizable
 	Ability   string
-	Arguments []interface{}
+	Arguments []any
 }

@@ -1,9 +1,9 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/supports/exceptions"
 	"github.com/goal-web/supports/utils"
 )
 
@@ -15,41 +15,37 @@ type Auth struct {
 	userDrivers   map[string]contracts.UserProviderDriver
 }
 
-func (this *Auth) ExtendUserProvider(key string, provider contracts.UserProviderDriver) {
-	this.userDrivers[key] = provider
+func (auth *Auth) ExtendUserProvider(key string, provider contracts.UserProviderDriver) {
+	auth.userDrivers[key] = provider
 }
 
-func (this *Auth) ExtendGuard(key string, guard contracts.GuardDriver) {
-	this.guardDrivers[key] = guard
+func (auth *Auth) ExtendGuard(key string, guard contracts.GuardDriver) {
+	auth.guardDrivers[key] = guard
 }
 
-func (this *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
-	config := this.authConfig.Guards[key]
+func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
+	config := auth.authConfig.Guards[key]
 	driver := utils.GetStringField(config, "driver")
 
-	if guardDriver, existsDriver := this.guardDrivers[driver]; existsDriver {
-		return guardDriver(key, config, ctx, this.UserProvider(utils.GetStringField(config, "provider")))
+	if guardDriver, existsDriver := auth.guardDrivers[driver]; existsDriver {
+		return guardDriver(key, config, ctx, auth.UserProvider(utils.GetStringField(config, "provider")))
 	}
 
-	panic(GuardException{
-		Exception: exceptions.New(fmt.Sprintf("unsupported guard driver：%s", driver), config),
-	})
+	panic(GuardException{Err: errors.New("unsupported guard driver：" + driver)})
 }
 
-func (this *Auth) UserProvider(key string) contracts.UserProvider {
-	if userProvider, existsUserProvider := this.userProviders[key]; existsUserProvider {
+func (auth *Auth) UserProvider(key string) contracts.UserProvider {
+	if userProvider, existsUserProvider := auth.userProviders[key]; existsUserProvider {
 		return userProvider
 	}
 
-	config := this.authConfig.Users[key]
+	config := auth.authConfig.Users[key]
 	driver := utils.GetStringField(config, "driver")
 
-	if userDriver, existsProvider := this.userDrivers[driver]; existsProvider {
-		this.userProviders[key] = userDriver(config)
-		return this.userProviders[key]
+	if userDriver, existsProvider := auth.userDrivers[driver]; existsProvider {
+		auth.userProviders[key] = userDriver(config)
+		return auth.userProviders[key]
 	}
 
-	panic(UserProviderException{
-		Exception: exceptions.New(fmt.Sprintf("unsupported user driver：%s", driver), config),
-	})
+	panic(UserProviderException{Err: errors.New(fmt.Sprintf("unsupported user driver：%s", driver))})
 }

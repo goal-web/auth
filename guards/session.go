@@ -44,7 +44,7 @@ func (this *Session) Once(user contracts.Authenticatable) {
 	this.isVerified = true
 }
 
-func (this *Session) Login(user contracts.Authenticatable) interface{} {
+func (this *Session) Login(user contracts.Authenticatable) any {
 	this.session.Put(this.sessionKey, user.GetId())
 
 	this.Once(user)
