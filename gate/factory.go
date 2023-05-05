@@ -108,12 +108,12 @@ func (factory *Factory) After(callable contracts.GateHook) contracts.GateFactory
 func (factory *Factory) Abilities() []string {
 	var abilities []string
 
-	for ability, _ := range factory.abilities {
+	for ability := range factory.abilities {
 		abilities = append(abilities, ability)
 	}
 
 	for name, policy := range factory.policies {
-		for ability, _ := range policy {
+		for ability := range policy {
 			abilities = append(abilities, fmt.Sprintf("%s@%s", name, ability))
 		}
 	}

@@ -47,5 +47,5 @@ func (auth *Auth) UserProvider(key string) contracts.UserProvider {
 		return auth.userProviders[key]
 	}
 
-	panic(UserProviderException{Err: errors.New(fmt.Sprintf("unsupported user driver：%s", driver))})
+	panic(UserProviderException{Err: fmt.Errorf("unsupported user driver：%s", driver)})
 }

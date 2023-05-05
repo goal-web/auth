@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"github.com/goal-web/contracts"
 	"net/http"
 )
 
@@ -11,14 +10,20 @@ type Response struct {
 	Code    any    `json:"code"`
 }
 
-func (this *Response) Status() int {
-	if this.Allowed {
+func (response *Response) Headers() http.Header {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (response *Response) Bytes() []byte {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (response *Response) Status() int {
+	if response.Allowed {
 		return http.StatusOK
 	}
 
 	return http.StatusUnauthorized
-}
-
-func (this *Response) Response(ctx contracts.HttpContext) error {
-	return ctx.JSON(this.Status(), this)
 }
