@@ -74,9 +74,9 @@ func (jwf *Jwt) parseToken() string {
 	if request, isHttpRequest := jwf.ctx.(contracts.HttpRequest); isHttpRequest {
 		if token = request.QueryParam("token"); token != "" {
 			return token
-		} else if token = request.Request().Header.Get("Authorization"); strings.Contains(token, "Bearer ") {
+		} else if token = request.GetHeader("Authorization"); strings.Contains(token, "Bearer ") {
 			return strings.ReplaceAll(token, "Bearer ", "")
-		} else if token = request.Request().Header.Get("token"); token != "" {
+		} else if token = request.GetHeader("token"); token != "" {
 			return token
 		} else if token = request.FormValue("token"); token != "" {
 			return token
