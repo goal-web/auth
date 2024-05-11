@@ -3,9 +3,11 @@ package auth
 import (
 	"errors"
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/database/table"
+	"reflect"
 )
 
-func Guard(guards ...string) any {
+func Guard[T contracts.Authenticatable](query *table.Table[T], guards ...string) any {
 	return func(request contracts.HttpRequest, next contracts.Pipe, auth contracts.Auth, config contracts.Config) any {
 
 		if len(guards) == 0 {
@@ -13,7 +15,16 @@ func Guard(guards ...string) any {
 		}
 
 		for _, guard := range guards {
-			if auth.Guard(guard, request).Guest() {
+			user := auth.Guard(guard, request).User()
+			value := reflect.ValueOf(user)
+			value.Elem().FieldByName("Model").Set(reflect.ValueOf(table.Model[T]{
+				Table:           query.GetTable(),
+				PrimaryKeyField: query.GetPrimayKeyField(),
+				Value:           value,
+				Class:           query.GetClass(),
+			}))
+			value.Elem().FieldByName("Model").FieldByName("Data").Set(value)
+			if user == nil {
 				panic(Exception{Err: errors.New(guard + " guard authentication failed")})
 			}
 		}
