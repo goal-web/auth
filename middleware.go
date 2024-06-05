@@ -17,6 +17,9 @@ func Guard[T contracts.Authenticatable](query *table.Table[T], guards ...string)
 		for _, guard := range guards {
 			user := auth.Guard(guard, request).User()
 			value := reflect.ValueOf(user)
+			if user == nil {
+				panic(Exception{Err: errors.New("auth.middleware: " + guard + " guard authentication failed")})
+			}
 			model := value.Elem().FieldByName("Model")
 			if model.CanSet() {
 				model.Set(reflect.ValueOf(table.Model[T]{
@@ -28,9 +31,6 @@ func Guard[T contracts.Authenticatable](query *table.Table[T], guards ...string)
 				value.Elem().FieldByName("Model").FieldByName("Data").Set(value)
 			}
 
-			if user == nil {
-				panic(Exception{Err: errors.New(guard + " guard authentication failed")})
-			}
 		}
 
 		return next(request)
