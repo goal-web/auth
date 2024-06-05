@@ -1,9 +1,17 @@
 package auth
 
-import "github.com/goal-web/supports/exceptions"
+import (
+	"github.com/goal-web/contracts"
+)
 
-type Exception = exceptions.Exception
+type Exception struct {
+	contracts.Exception
+}
 
-type GuardException = exceptions.Exception
+type GuardException struct {
+	contracts.Exception
+}
 
-type UserProviderException = exceptions.Exception
+type UserProviderException struct {
+	contracts.Exception
+}

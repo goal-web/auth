@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"errors"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/database/table"
+	"github.com/goal-web/supports/exceptions"
 	"reflect"
 )
 
@@ -18,7 +18,7 @@ func Guard[T contracts.Authenticatable](query *table.Table[T], guards ...string)
 			user := auth.Guard(guard, request).User()
 			value := reflect.ValueOf(user)
 			if user == nil {
-				panic(Exception{Err: errors.New("auth.middleware: " + guard + " guard authentication failed")})
+				panic(Exception{exceptions.New("auth.middleware: " + guard + " guard authentication failed")})
 			}
 			model := value.Elem().FieldByName("Model")
 			if model.CanSet() {

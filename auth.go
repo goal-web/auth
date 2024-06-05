@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports/exceptions"
 	"github.com/goal-web/supports/utils"
 )
 
@@ -31,7 +31,7 @@ func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
 		return guardDriver(key, config, ctx, auth.UserProvider(utils.GetStringField(config, "provider")))
 	}
 
-	panic(GuardException{Err: errors.New("unsupported guard driver：" + driver)})
+	panic(GuardException{exceptions.New("unsupported guard driver：" + driver)})
 }
 
 func (auth *Auth) UserProvider(key string) contracts.UserProvider {
@@ -47,5 +47,5 @@ func (auth *Auth) UserProvider(key string) contracts.UserProvider {
 		return auth.userProviders[key]
 	}
 
-	panic(UserProviderException{Err: fmt.Errorf("unsupported user driver：%s", driver)})
+	panic(UserProviderException{exceptions.WithError(fmt.Errorf("unsupported user driver：%s", driver))})
 }
