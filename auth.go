@@ -11,7 +11,7 @@ import (
 type Auth struct {
 	authConfig Config
 
-	mutex         sync.Mutex
+	mutex         sync.RWMutex
 	guardDrivers  map[string]contracts.GuardDriver
 	userProviders map[string]contracts.UserProvider
 	userDrivers   map[string]contracts.UserProviderDriver
@@ -30,8 +30,6 @@ func (auth *Auth) ExtendGuard(key string, guard contracts.GuardDriver) {
 }
 
 func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
-	auth.mutex.Lock()
-	defer auth.mutex.Unlock()
 	config := auth.authConfig.Guards[key]
 	driver := utils.GetStringField(config, "driver")
 
@@ -43,8 +41,6 @@ func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
 }
 
 func (auth *Auth) UserProvider(key string) contracts.UserProvider {
-	auth.mutex.Lock()
-	defer auth.mutex.Unlock()
 	if userProvider, existsUserProvider := auth.userProviders[key]; existsUserProvider {
 		return userProvider
 	}
@@ -53,6 +49,8 @@ func (auth *Auth) UserProvider(key string) contracts.UserProvider {
 	driver := utils.GetStringField(config, "driver")
 
 	if userDriver, existsProvider := auth.userDrivers[driver]; existsProvider {
+		auth.mutex.Lock()
+		defer auth.mutex.Unlock()
 		auth.userProviders[key] = userDriver(config)
 		return auth.userProviders[key]
 	}
