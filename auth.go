@@ -5,25 +5,33 @@ import (
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/exceptions"
 	"github.com/goal-web/supports/utils"
+	"sync"
 )
 
 type Auth struct {
 	authConfig Config
 
+	mutex         sync.Mutex
 	guardDrivers  map[string]contracts.GuardDriver
 	userProviders map[string]contracts.UserProvider
 	userDrivers   map[string]contracts.UserProviderDriver
 }
 
 func (auth *Auth) ExtendUserProvider(key string, provider contracts.UserProviderDriver) {
+	auth.mutex.Lock()
+	defer auth.mutex.Unlock()
 	auth.userDrivers[key] = provider
 }
 
 func (auth *Auth) ExtendGuard(key string, guard contracts.GuardDriver) {
+	auth.mutex.Lock()
+	defer auth.mutex.Unlock()
 	auth.guardDrivers[key] = guard
 }
 
 func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
+	auth.mutex.Lock()
+	defer auth.mutex.Unlock()
 	config := auth.authConfig.Guards[key]
 	driver := utils.GetStringField(config, "driver")
 
@@ -35,6 +43,8 @@ func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
 }
 
 func (auth *Auth) UserProvider(key string) contracts.UserProvider {
+	auth.mutex.Lock()
+	defer auth.mutex.Unlock()
 	if userProvider, existsUserProvider := auth.userProviders[key]; existsUserProvider {
 		return userProvider
 	}
