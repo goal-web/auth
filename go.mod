@@ -2,9 +2,7 @@ module github.com/goal-web/auth
 
 go 1.23.1
 
-require (
-	github.com/golang-jwt/jwt v3.2.2+incompatible
-)
+require github.com/golang-jwt/jwt v3.2.2+incompatible
 
 require (
 	github.com/apex/log v1.9.0 // indirect
