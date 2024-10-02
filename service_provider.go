@@ -51,4 +51,8 @@ func (provider serviceProvider) Register(container contracts.Application) {
 	container.Bind("auth.guard", func(config contracts.Config, auth contracts.Auth, ctx contracts.Context) contracts.Guard {
 		return auth.Guard(config.Get("auth").(Config).Defaults.Guard, ctx)
 	})
+	container.Call(func(middleware contracts.Middleware) {
+		middleware.Register("auth", Middleware)
+		middleware.Register("guest", GuestMiddleware)
+	})
 }

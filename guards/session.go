@@ -29,51 +29,51 @@ type Session struct {
 	current    contracts.Authenticatable
 }
 
-func (this *Session) Logout() error {
-	this.session.Remove(this.sessionKey)
-	this.current = nil
+func (session *Session) Logout() error {
+	session.session.Remove(session.sessionKey)
+	session.current = nil
 	return nil
 }
 
-func (this *Session) Error() error {
+func (session *Session) Error() error {
 	return nil
 }
 
-func (this *Session) Once(user contracts.Authenticatable) {
-	this.current = user
-	this.isVerified = true
+func (session *Session) Once(user contracts.Authenticatable) {
+	session.current = user
+	session.isVerified = true
 }
 
-func (this *Session) Login(user contracts.Authenticatable) any {
-	this.session.Put(this.sessionKey, user.GetId())
+func (session *Session) Login(user contracts.Authenticatable) any {
+	session.session.Put(session.sessionKey, user.GetAuthenticatableKey())
 
-	this.Once(user)
+	session.Once(user)
 
 	return true
 }
 
-func (this *Session) User() contracts.Authenticatable {
-	if !this.isVerified {
-		this.isVerified = true
-		if userId := this.session.Get(this.sessionKey, ""); userId != "" {
-			this.current = this.users.RetrieveById(userId)
+func (session *Session) User() contracts.Authenticatable {
+	if !session.isVerified {
+		session.isVerified = true
+		if userId := session.session.Get(session.sessionKey, ""); userId != "" {
+			session.current = session.users.RetrieveById(userId)
 		}
 	}
 
-	return this.current
+	return session.current
 }
 
-func (this *Session) GetId() (id string) {
-	if user := this.User(); user != nil {
-		id = user.GetId()
+func (session *Session) GetAuthenticatableKey() (id string) {
+	if user := session.User(); user != nil {
+		id = user.GetAuthenticatableKey()
 	}
 	return
 }
 
-func (this *Session) Check() bool {
-	return this.User() != nil
+func (session *Session) Check() bool {
+	return session.User() != nil
 }
 
-func (this *Session) Guest() bool {
-	return this.User() == nil
+func (session *Session) Guest() bool {
+	return session.User() == nil
 }

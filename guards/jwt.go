@@ -112,7 +112,7 @@ func (jwf *Jwt) Error() error {
 
 func (jwf *Jwt) Login(user contracts.Authenticatable) any {
 	token, err := jwt.NewWithClaims(jwf.signMethod, JwtAuthClaims{
-		UserId: user.GetId(),
+		UserId: user.GetAuthenticatableKey(),
 		Guard:  jwf.name,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(jwf.lifetime).Unix(),
@@ -139,9 +139,9 @@ func (jwf *Jwt) User() contracts.Authenticatable {
 	return jwf.current
 }
 
-func (jwf *Jwt) GetId() (id string) {
+func (jwf *Jwt) GetAuthenticatableKey() (id string) {
 	if user := jwf.User(); user != nil {
-		id = user.GetId()
+		id = user.GetAuthenticatableKey()
 	}
 	return
 }
