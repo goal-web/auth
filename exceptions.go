@@ -4,12 +4,10 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-type Exception struct {
-	contracts.Exception
-}
-
 type GuardException struct {
 	contracts.Exception
+
+	Ctx contracts.Context
 }
 
 type UserProviderException struct {

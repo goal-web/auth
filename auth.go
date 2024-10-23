@@ -37,7 +37,10 @@ func (auth *Auth) Guard(key string, ctx contracts.Context) contracts.Guard {
 		return guardDriver(key, config, ctx, auth.UserProvider(utils.GetStringField(config, "provider")))
 	}
 
-	panic(GuardException{exceptions.New("unsupported guard driver：" + driver)})
+	panic(GuardException{
+		Exception: exceptions.New("unsupported guard driver：" + driver),
+		Ctx:       ctx,
+	})
 }
 
 func (auth *Auth) UserProvider(key string) contracts.UserProvider {
@@ -55,5 +58,7 @@ func (auth *Auth) UserProvider(key string) contracts.UserProvider {
 		return auth.userProviders[key]
 	}
 
-	panic(UserProviderException{exceptions.WithError(fmt.Errorf("unsupported user driver：%s", driver))})
+	panic(UserProviderException{
+		Exception: exceptions.WithError(fmt.Errorf("unsupported user driver：%s", driver)),
+	})
 }

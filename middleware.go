@@ -14,7 +14,10 @@ func Guard(guards ...string) any {
 		for _, guard := range guards {
 			user := auth.Guard(guard, request).User()
 			if user == nil {
-				panic(Exception{exceptions.New("auth.middleware: " + guard + " guard authentication failed")})
+				panic(GuardException{
+					Exception: exceptions.New("auth.middleware: " + guard + " guard authentication failed"),
+					Ctx:       request,
+				})
 			}
 		}
 
@@ -29,7 +32,10 @@ func Middleware(request contracts.HttpRequest, next contracts.Pipe, auth contrac
 
 	for _, guard := range guards {
 		if auth.Guard(guard, request).Guest() {
-			panic(Exception{exceptions.New("auth.middleware: " + guard + " guard authentication failed")})
+			panic(GuardException{
+				Exception: exceptions.New("auth.middleware: " + guard + " guard authentication failed"),
+				Ctx:       request,
+			})
 		}
 	}
 
@@ -43,7 +49,10 @@ func GuestMiddleware(request contracts.HttpRequest, next contracts.Pipe, auth co
 
 	for _, guard := range guards {
 		if !auth.Guard(guard, request).Guest() {
-			panic(Exception{exceptions.New("auth.middleware: " + guard + " guard authentication failed")})
+			panic(GuardException{
+				Exception: exceptions.New("auth.middleware: " + guard + " guard authentication failed"),
+				Ctx:       request,
+			})
 		}
 	}
 
