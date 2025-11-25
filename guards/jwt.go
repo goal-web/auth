@@ -5,12 +5,13 @@ package guards
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"github.com/golang-jwt/jwt"
-	"strings"
-	"time"
 )
 
 const (

@@ -9,20 +9,20 @@
 ![CI](https://img.shields.io/github/actions/workflow/status/goal-web/auth/ci.yml?branch=master&label=CI)
 ![Lint](https://img.shields.io/github/actions/workflow/status/goal-web/auth/lint.yml?branch=master&label=Lint)
 
-[Docs](https://pkg.go.dev/github.com/goal-web/auth) · [Issues](https://github.com/goal-web/auth/issues) · [Releases](https://github.com/goal-web/auth/releases) · [中文文档](./README.cn.md)
+[Docs](https://pkg.go.dev/github.com/goal-web/auth) · [Issues](https://github.com/goal-web/auth/issues) · [Releases](https://github.com/goal-web/auth/releases) · [English](./README.md)
 
-Auth component: guards (JWT/session), providers and middleware.
+Auth 组件：提供 JWT/Session 守卫、DB Provider 与中间件。
 
-## Highlights
+## 亮点
 
-- JWT & session guards
-- DB provider
-- Middleware helpers
+- JWT 与 Session 守卫
+- 数据库 Provider
+- 中间件辅助
 
-## Compatibility
+## 兼容性
 
 - Go `>= 1.25.0`
-- Module path: `github.com/goal-web/auth`
+- 模块路径：`github.com/goal-web/auth`
 
 ## Star History
 
